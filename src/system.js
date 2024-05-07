@@ -13,14 +13,17 @@ export default class System {
 		this.renderer = await PIXI.autoDetectRenderer({
 			width: window.innerWidth,
 			height: window.innerHeight,
-			backgroundColor: 0x202020,
+			backgroundColor: 0x304038,
 			antialias: false,
 			transparent: false,
 			autoDensity: false,
 			resolution: 1,
+			preference: 'webgpu', // 'webgl'
+			powerPreference: 'high-performance',
+			clearBeforeRender:false,
+			preserveDrawingBuffer:false,
 		});
 		this.elem.appendChild(this.renderer.view.canvas);
-		this.renderer.view.canvas.style.imageRendering = 'pixelated';
 
 		this.stage = new PIXI.Container();
 		this.stage.eventMode = 'passive';
@@ -33,7 +36,7 @@ export default class System {
 				kernelSize:5
 			}),
 			new BloomFilter({
-				strength: 24,
+				strength: 32,
 				quality: 7,
 				resolution: 1,
 				kernelSize: 5,
@@ -46,25 +49,30 @@ export default class System {
 		g.blendMode = 'add';
 		this.stage.addChild(g);
 		this.graphic = g;
-	
+
 		this.loop();
 	}
 
 	loop() {
 		let g = this.graphic;
+		let a = Math.random() > 0.9 ? 1 : 0;
 		g.clear();
+		g.setStrokeStyle({
+			width: 3,
+			color: 0x00ff33,
+			alpha: a,
+			alignment: 0.5,
+			cap: 'square',
+		});
+		g.rotation += 0.01;
 		g.moveTo(this.fuzz(-200), this.fuzz(-200));
 		for(let d=-175; d<=200; d+=25) {
-			g.lineTo(this.fuzz(d), this.fuzz(d)).stroke({
-				width: 3,
-				color: 0x00ff33,
-				alpha: Math.random() > 0.7 ? 1 : 0,
-				alignment: 0.5,
-				cap: 'square',
-			});
+			if(a != 0) {
+				g.lineTo(this.fuzz(d), this.fuzz(d)).stroke();
+			} else {
+				g.moveTo(this.fuzz(d), this.fuzz(d));
+			}
 		}
-		g.rotation += 0.001;
-
 		this.render();
 		requestAnimationFrame(this.loop.bind(this));
 	}
